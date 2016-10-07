@@ -1,158 +1,270 @@
-
+import java.util.ArrayList;
 
 /**
- * The Player class is created for a simple RPG program, called "RPG." 
+ * Player er en karakter i et rollespill.
  * 
- * To play, create an instance of the class and set your desired name and 
- * type. Every player begins play with 100 health. Name and type may be 
- * changed at any time, while health is changed by adding or subtracting from 
- * the value. You are dead once left with 0 health. 
+ * Ingen setters for inventory og capacity da disse er final. 
  * 
- * If a player dies, an alert is printed onto the console. 
- * 
- * @author skj006 (Sindre S. Kjær)
- * @version 13.09.2016
+ * @author skj006 
+ * @version 29.09.2016
  */
-
-public class Player // This is a class
+public class Player
 {
-	/**
-	 * Following are the fields for the Player class.
-	 */
-	private String name;
-	private String type;
-	private int health;
-	
-	
-	/** 
-	 * Constructor to create a new player object. Both name and type is chosen 
-	 * immediately, while health is set to 100 (max) by default.
-	 * 
-	 * @param giveName The name of the player
-	 * @param giveType The type of the player
-	 */
-	public Player(String giveName, String giveType) // This is the constructor
-	{
-		name = giveName;
-		type = giveType;
-		health = 100; 
-	}
-		
-	/**
-	 * The main method, which creates three unique player objects. Each player's 
-	 * details will be printed onto the console. 
-	 */
-	public static void main(String[] args) // This is the main method
-	{
-		Player raph = new Player("Raphael", "Warrior"); // Player Raphael is created
-		Player laur = new Player("Laura", "Cleric"); // Player Laura is created
-		Player mirz = new Player("Mirzendier", "Mage"); // Player Mirzendier is created
-		
-		// All players' info is printed to console
-		raph.print();
-		laur.print();
-		mirz.print();
-	}
-	
-	
-	/**
-	 * Method to change player name. Overwrites existing name. 
-	 * 
-	 * @param newName Sets a new name for player
-	 */
-	public void setName(String newName) // This is the setName method
-	{
-		name = newName;
-	}
-	
-	/**
-	 * Method to change player type. Overwrites existing type. 
-	 * 
-	 * @param newType Sets a new type for player
-	 */
-	public void setType(String newType) // This is the setType method
-	{
-		type = newType;
-	}
-	
-	/**
-	 * This method returns a boolean value that depends on whether or 
-	 * not the player is dead.  
-	 */
-	public boolean isDead() // This is the isDead method
-	{
-		if(health <= 0) {
-			return true;
-		}else{
-			return false;
-		}
-	}
-		
-	/**
-	 * Method to increase or decrease player health. The health value 
-	 * can't go below 0 or beyond 100. A decrease in health may result 
-	 * in the player being declared dead.
-	 * 
-	 * @param amount Insert a positive or negative integer to increase or decrease health
-	 */
-	public void changeHealth(int amount) // This is the changeHealth method
-	{
-		health += amount; // Adds the amount parameter to current health
-		if(health <= 0) {
-			// If health falls below 0, set to 0
-		    health = 0;
-			System.out.println("Oh no! " + name + " has died!");
-		}else if(health >= 100) {
-			// If health goes above 100, set to 100
-		    health = 100;
-		}	
-	}
-	
-	/**
-	 * Method used for printing available player information to console. 
-	 * 
-	 * Player information is printed as a sheet, starting with a 
-	 * separation line for better readability when several players are 
-	 * printed at the same time. Beneath the line, player name and 
-	 * type is presented as a title. 
-	 */
-	public void print() // This is the print method
-	{
-		System.out.println("---");
-		System.out.println(name + ", the " + type);
-		System.out.println();
-		System.out.println("Current Health: " + health + "/100");
-		if(isDead()) {
-			System.out.println("Status: DEAD");
-		}else{
-			System.out.println("Status: Still alive");
-		}
-		System.out.println();
-		System.out.println();
-	}
-	
-	
-	/**
-	 * Method returns the name of the player.
-	 */
-	public String getName() // This is the getter for the name variable
-	{
-		return name;
-	}
-	
-	/**
-	 * Method returns the type of the player. 
-	 */
-	public String getType() // This is the getter for the type variable
-	{
-		return type;
-	}
-	
-	/**
-	 * Method returns the health value of the player. 
-	 */
-	public int getHealth() // This is the getter for the health variable
-	{
-		return health;
-	}
+    private String name;
+    private String type;
+    private int health;
+    private int gold;
+    private final ArrayList<Item> inventory = new ArrayList<>();
+    private final int capacity = 50;
+
+    /**
+     * Klassens konstruktør. Players health vil alltid settes til 100. Gold settes til 200. 
+     * 
+     * @param name      Player-navn
+     * @param type      Player-type
+     */
+    public Player (String name, String type) {
+        setName(name);
+        setType(type);
+        setHealth(100);
+        setGold(200);
+    }
+
+    /**
+     * Mutasjonsmetode for feltet name. 
+     * 
+     * @param String      nytt navn for Player. 
+     */
+    public void setName(String name) {
+        this.name = Checkers.checkString(name);
+    }
+
+    /**
+     * Mutasjonsmetode for feltet type. 
+     * 
+     * @param String      ny type for Player. 
+     */
+    public void setType(String type) {
+        switch(type.toLowerCase()) {
+            case "mage":
+                this.type = "Mage";
+                break;
+            case "ranger":
+                this.type = "Ranger";
+                break;
+            case "rogue":
+                this.type = "Rogue";
+                break;
+            case "warrior":
+                this.type = "Warrior";
+                break;
+            default:
+                this.type = "Unspecified";
+                break;
+        }
+    }
+
+    /**
+     * Mutasjonsmetode for feltet health.
+     * 
+     * @param int       ny health for Player.
+     */
+    public void setHealth(int health) {
+        this.health = Checkers.checkIfPositive(health);
+        
+        if(health > 100) {
+            this.health = 100;
+        }
+    }
+    
+    /**
+     * Mutasjonsmetode for feltet gold. 
+     * 
+     * @param int       ny mengde gull for Player.
+     */
+    public void setGold(int gold) {
+        this.gold = Checkers.checkIfPositive(gold);
+    }
+    
+    /**
+     * Endrer helsen for Player ved å legge til helse ved positivt heltall i parameter, 
+     * eller trekke fra ved negativt heltall i parameter.
+     * 
+     * @param healthPoints  positivt eller negativt heltall som skal trekkes fra Players health. 
+     */
+    public void changeHealth(int healthPoints) {
+        this.health += healthPoints;
+        
+        if(health < 0) {
+            health = 0;
+        } else if(health > 100) {
+            health = 100;
+        }
+    }
+    
+    /**
+     * Endrer gullbeholdningen for Player ved å legge til gull ved positivt heltall i parameter,
+     * eller trekke fra ved negativt heltall i parameter. Dersom det skal trekkes fra mer gull enn 
+     * det som gjenstår i Players gullbeholdning, stopper metoden.
+     * 
+     * @parameter goldPieces    positivt eller negativt heltall som skal legger til Players gullbeholdning. 
+     */
+    public void changeGold(int goldPieces) {
+        this.gold += goldPieces;
+        
+        this.gold = Checkers.checkIfPositive(gold);
+    }
+    
+    /**
+     * Mutasjonsmetode for å kjøpe et item. Sjekker at spiller har nok gold og capacity. 
+     * 
+     * @param Item    det Item man vil kjøpe.
+     */
+    public void buyItem(Item item) {
+        int playerGold = getGold();
+        int inWeight = totalWeight();
+
+        int itemCost = item.getValue();
+        int itemWeight = item.getWeight();
+        
+        if((playerGold >= itemCost) && ((inWeight + itemWeight) <= capacity)) { //Sjekker om spiller har nok gold og capacity.
+            changeGold(-itemCost);
+            inventory.add(item);
+        }
+    }
+    
+    /**
+     * Mutasjonsmetode for å selge et item.
+     * 
+     * @param Item    det Item man vil selge.
+     */
+    public void sellItem(Item item) {
+        int itemValue = item.getValue();
+        
+        if(inventory.contains(item)) {
+            changeGold(itemValue);
+            inventory.remove(item);
+        }
+    }
+        
+    /**
+     * Aksessmetode for å finne et item.
+     * 
+     * @return String   navn på Item man søker på.
+     * @return null     hvis Item-navn ikke funnet.
+     */
+    public Item findItem(String itemSearch) {
+        for(Item item : inventory) {
+            if(item.getName().equalsIgnoreCase(itemSearch)) {
+                return item;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Aksessmetode for weight. 
+     * 
+     * @return int  samlet vekt av items i inventory.
+     */
+    public int totalWeight() {
+        int weightSum = 0;
+        
+        for(Item item : inventory) {
+            weightSum += item.getWeight();
+        }
+        
+        return weightSum;
+    }
+    
+    /**
+     * Sjekker om Player er død.
+     * 
+     * @return true     hvis død.
+     * @return false    hvis levende.
+     */
+    public boolean isDead() {
+        if (health <= 0) {
+            return true;
+        } else {
+            return false;
+        }       
+    }
+    
+    /**
+     * Aksessmetode for name.
+     * 
+     * @return String   navn på Player.
+     */
+    public String getName() {
+        return name;
+    }
+    
+    /**
+     * Aksessmetode for type.
+     * 
+     * @return String   type Player.
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * Aksessmetode for name.
+     * 
+     * @return int      heltall som representerer helsen for Player.
+     */
+    public int getHealth() {
+        return health;
+    }
+    
+    /**
+     * Aksessmetode for gold.
+     * 
+     * @return int      heltall som representerer gullbeholdningen til Player.
+     */
+    public int getGold() {
+        return gold;
+    }
+    
+    /**
+     * Aksessmetode for inventory. 
+     * 
+     * @return ArrayList        returnerer ArrayList-objektet inventory. 
+     */
+    public ArrayList<Item> getInventory() {
+        return inventory;
+    }
+    
+    /**
+     * Aksessmetode for capacity. 
+     * 
+     * @return int      heltall som representerer Player sin capacity.
+     */
+    public int getCapacity() {
+        return capacity;
+    }
+    
+    /**
+     * Skriver ut informasjon om Player til terminalen.
+     */
+    public void print() {
+        System.out.println("---");
+        System.out.println(name.toUpperCase());
+        System.out.println("Type: " + type);
+        System.out.println("Health: " + health + "/100");
+        System.out.println("Gold: " + gold + " gp");
+        System.out.println("Currently carrying: " + totalWeight() + " of " + capacity + " kg");
+        if (isDead()) {
+            System.out.println("Status: DEAD");
+        } else {
+            System.out.println("Status: ALIVE");
+        }
+        System.out.println("Inventory:");
+        for(Item item : inventory) {
+            item.print();
+        }
+        System.out.println();
+    }
 }
