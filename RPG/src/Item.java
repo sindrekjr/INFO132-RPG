@@ -1,135 +1,114 @@
-
 /**
- * Item er en klasse for gjenstander i et rollespill.
+ * Denne klassen representer en gjenstand spilleren kan kjøpe.
  * 
- * @author skj006 
- * @version 29.09.2016
+ * @author skj006
  */
-public class Item
-{
-    private String name;
-    private int value;
-    private int weight;
-    private String action;
-    private String description;
+public class Item {
+    
+    private String name, description, action;
+    private int value, weight;
+    private boolean expendable;
 
     /**
-     * Konstruktør for objekter av klassen Item. Objektene som kan lages er predefinerte, og
-     * for å lage et slikt objekt må man kalle på riktig navn som parameter. 
-     * 
-     * @param name          Item-navn/type
-     * @param value         Item-verdi
-     * @param weight        Item-vekt
-     * @param action        Item-handling
-     * @param description   Item-beskrivelse
+     * Konstruktør for Item
+     * @param name          navnet på gjenstanden
+     * @param description   beskrivelse av gjenstanden
+     * @param action        hva skjer når spilleren bruker gjenstanden
+     * @param value         verdien på gjenstanden i gull
+     * @param weight        vekten på gjenstanden
      */
-    public Item(String name, int value, int weight, String action, String description) {
+    public Item(String name, String description, String action, int value, int weight) {
         setName(name);
+        setDescription(description);
+        setAction(action);
         setValue(value);
         setWeight(weight);
-        setAction(action);
+        setExpendable(false);
+    }
+
+    /**
+     * Konstruktør for Item
+     * @param name          navnet på gjenstanden
+     * @param description   beskrivelse av gjenstanden
+     * @param action        hva skjer når spilleren bruker gjenstanden
+     * @param value         verdien på gjenstanden i gull
+     * @param weight        vekten på gjenstanden
+     * @param expendable    boolean som sier om gjenstanden blir oppbrukt
+     */
+        public Item(String name, String description, String action, int value, int weight, boolean expendable) {
+        setName(name);
         setDescription(description);
+        setAction(action);
+        setValue(value);
+        setWeight(weight);
+        setExpendable(expendable);
     }
-    
+
     /**
-     * Mutasjonsmetode for feltet name.
-     * 
-     * @param newName       nytt navn for Item.
-     */
-    public void setName(String newName) {
-        this.name = Checkers.checkString(newName);
-    }
-    
-    /**
-     * Mutasjonsmetode for feltet value.
-     * 
-     * @param newValue      ny verdi for Item.
-     */
-    public void setValue(int newValue) {
-        this.value = Checkers.checkIfPositive(newValue);
-    }
-    
-    /**
-     * Mutasjonsmetode for feltet weight.
-     * 
-     * @param newWeight     ny vekt for Item.
-     */
-    public void setWeight(int newWeight) {
-        this.weight = Checkers.checkIfPositive(newWeight);
-    }
-    
-    /**
-     * Mutasjonsmetode for feltet action.
-     * 
-     * @param newAction     ny action for Item.
-     */
-    public void setAction(String newAction) {
-        this.action = Checkers.checkString(newAction);
-    }
-    
-    /**
-     * Mutasjonsmetode for feltet description.
-     * 
-     * @param newDescription    ny beskrivelse for Item.
-     */
-    public void setDescription(String newDescription) {
-        this.description = Checkers.checkString(newDescription);
-    }
-    
-    /**
-     * Aksessmetode for feltet name.
-     * 
-     * @return String       navn på Item. 
+     * Aksessmetode for navnet på gjenstanden.
+     * @return String returnerer navnet på gjenstanden
      */
     public String getName() {
         return name;
     }
-    
+
     /**
-     * Aksessmetode for feltet value.
-     * 
-     * @return int          heltall for verdi på Item.
+     * Mutasjonsmetode for navnet på gjenstanden.
+     * @param name det nye navnet på gjenstanden
      */
-    public int getValue() {
-        return value;
+    public void setName(String name) {
+        this.name = Utilities.checkString(name);
     }
-    
-    /**
-     * Aksessmetode for feltet weight.
-     * 
-     * @return int          heltall for vekt på Item.
-     */
-    public int getWeight() {
-        return weight;
-    }
-    
-    /**
-     * Aksessmetode for feltet action.
-     * 
-     * @return String       handling for Item.
-     */
-    public String getAction() {
-        return action;
-    }
-    
-    /**
-     * Aksessmetode for feltet description.
-     * 
-     * @return String       beskrivelse av Item.
-     */
+
     public String getDescription() {
         return description;
     }
+
+    public void setDescription(String description) {
+        this.description = Utilities.checkString(description);
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = Utilities.checkString(action);
+    }
+
+    public int getValue() {
+        return value;
+    }
+
+    public void setValue(int value) {
+        this.value = Utilities.cleanNegative(value);
+    }
+
+    public int getWeight() {
+        return weight;
+    }
+
+    public void setWeight(int weight) {
+        this.weight = Utilities.cleanNegative(weight);
+    }
     
+    public boolean getExpendable() {
+        return expendable;
+    }
+        
+    public void setExpendable(boolean expendable) {
+        this.expendable = expendable;
+    }
+
     /**
-     * Skriver ut informasjon om Item til terminalen.
+     * Aksessmetode for informasjon om gjenstanden.
+     * @return String navn, beskrivelse, action, verdi, og vekt i strengformat
      */
-    public void print() {
-        System.out.println(name.toUpperCase());
-        System.out.println("Value: " + value + " gp");
-        System.out.println("Weight: " + weight + " kg");
-        System.out.println("Action: " + action);
-        System.out.println("Description: " + description);
-        System.out.println();
+    public String toString() {
+        return "Name: " + getName() + "\n"
+                + "Description: " + getDescription() + "\n"
+                + "Action: " + getAction() + "\n"
+                + "Value: " + getValue() + "\n"
+                + "Weight: " + getWeight() + "\n";
     }
 }
