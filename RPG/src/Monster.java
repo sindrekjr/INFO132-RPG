@@ -1,47 +1,29 @@
-
 /**
- * Klassen representerer et monster i et RPG-spill. Subklasse av Creature.
+ * Denne klassen representerer et monster i spillet. Klassen er en subklasse av Character
  * 
  * @author skj006
  */
-public class Monster extends Creature {
-
-    private String description;
-    
+public class Monster extends Character {    
     /**
-     * Bred konstruktør for alskens monstre. I denne utgaven av spillet har alle monstre 20 strength. 
-     * @param name      navnet på monsteret. 
-     * @param health    helsen og makshelsen til monsteret.
-     * @param gold      gullbeholdningen til monsteret.
+     * Konstruktør for Monster
+     * Konstruktøren setter minDamage for monster til 20 siden det står spesifisert i oppgaven
+     * @param name navnet på monsteret
+     * @param maxDamage maksimumsskaden monsteret kan gjøre.
      */
-    public Monster(String name, int health, int gold, String description) {
-        super(name, 20, health, health, gold);
-        setDescription(description);
+    public Monster(String name, int maxDamage) {
+        super(name, 100, 100, 20, maxDamage);
     }
     
-    /**
-     * Mutasjonsmetode for feltet description.
-     * @param description beskrivelse av monsteret.
-     */
-    public void setDescription(String description) {
-        this.description = Utilities.checkString(description.trim());
+    public boolean useItem(Item item) {
+        return false;
     }
     
-    /**
-     * Aksessmetode for feltet description.
-     * @return String beskrivelse av monsteret. 
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * Metode for å printe informasjon om et monster. 
-     * @return String samlet streng med all info om monsteret. 
-     */
-    public String toString() {
-        return super.toString() 
-                + "\n"
-                + "Description: " + getDescription();
+    public Item findItem(String search) {
+        if(hasEquippedWeapon()) {
+            if(getEquippedWeapon().getName().toLowerCase() == search.trim().toLowerCase()) {
+                return getEquippedWeapon();
+            }
+        } 
+        return null;
     }
 }

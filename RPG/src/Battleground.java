@@ -1,172 +1,272 @@
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 /**
- * En klasse for slåssing i RPG-spill. 
+ * Battleground er et område hvor man kan slåss med monstre og bruke gjenstander.
  * 
  * @author skj006
  */
-public class Battleground {
-    
-    private InputReader reader;
-    private Random rand;
-    private ArrayList<Monster> monsterList;
-    private Player player;
-    private Monster monster;
-    private int roundCount;
-    
-    /**
-     * Konstruktør uten parameter. Initialiserer kun viktigste felter. 
-     */
-    public Battleground() {
-        reader = new InputReader();
-        rand = new Random();
-        monsterList = new ArrayList<>();
-    }
-    
-    /**
-     * Konstruktør som tar imot en spiller. Fyller også en liste med monstre og skriver ut velkomst.
-     * @param Player spilleren som entrer arenaen
-     */
-    public Battleground(Player player) {
-        reader = new InputReader();
-        rand = new Random();
-        monsterList = new ArrayList<>();
-        fillMonsterList();
+public class Battleground implements Area {
+    private ArrayList<Monster> graveyard = new ArrayList<Monster>(); 
+    private ArrayList<Monster> monsters = new ArrayList<Monster>();
+    private int monstersBeaten;
+    private String name; 
+    private Player player; 
+    private InputReader reader; 
+    private Output output;
         
-        setPlayer(player);
+    /**
+     * Konstruktør for Battleground. Den tar en liste med monstre, en player og inputreader
+     * @param name navnet på battleground
+     * @param monsters En samling med monstre
+     * @param reader En reader som lar brukeren skrive inn kommandoer til programmet
+     */
+    public Battleground(String name, ArrayList<Monster> monsters, InputReader reader) {
+        sortMonsters(monsters);
+        setName(name);
+        this.reader = reader;
+        this.output = new ConsoleWriter();
+    }
+
+    /**
+     * Metode for å gå inn i battleground. 
+     * @param player spilleren som entrer
+     */
+    public void enter(Player player) {
+        this.player = player;
+        printStats();
         printWelcome();
-    }
-
-    /**
-     * Fyller en liste med monstre som kan brukes i Battleground. 
-     */
-    public void fillMonsterList() {
-        monsterList.add(new Monster("Bugbear", 80, 40, "A humanoid creature with flared black and brown fur."));
-        monsterList.add(new Monster("Dire Cat", 10, 1, "A house cat with abnormally fierce whiskers."));
-        monsterList.add(new Monster("Dragon", 200, 1000, "A reptile-like creature with large wings and the ability to breathe fire."));
-        monsterList.add(new Monster("Erroneous Algorithm", 30, 5, "Bad request."));
-        monsterList.add(new Monster("Giant Spider", 90, 6, "A monstrous spider as large as a wolf."));
-        monsterList.add(new Monster("Goblin", 50, 12, "A small humanoid with a wide head and clumsy demeanour."));
-        monsterList.add(new Monster("Lamia", 150, 500, "A monstrously large female humanoid with a body like a horse or a snake."));
-        monsterList.add(new Monster("Ogre", 140, 50, "An angry humanoid the size of four people."));
-        monsterList.add(new Monster("Orc", 80, 20, "An ugly and stinking humanoid made for war."));
-        monsterList.add(new Monster("Sandworm", 120, 100, "A gigantic worm normally seen only in the desert."));
-        monsterList.add(new Monster("Werewolf", 100, 100, "A creature that loses its control whenever its lycantrophy takes effect."));
-        monsterList.add(new Monster("Zombie", 30, 1, "A dead person reanimated by a necromancer."));
-    }
-
-    /**
-     * Starter kamp med et tilfeldig monster. 
-     */
-    public void startBattle() {
-        roundCount = 1;
-        boolean endBattle = false;
-        setMonster(fetchMonster());
         
-        printEncounter(monster);
-        while(!endBattle) {
-            System.out.print("Round " + roundCount + ": ");
-            GivenCommand input = reader.getInput();
-            endBattle = processBattleCommand(input);
+        boolean finished = false;
+        while(!finished) {
+            finished = processCommand(reader.getInput());
         }
     }
-    
+
     /**
-     * Utfører kommando gitt av spilleren.
-     * @param command   kommando hentet av reader
-     * @return boolean  forteller om kampen etterpå er over eller ikke
+     * Metode for å prosessere mottatt kommando og gjennomføre den.
+     * @param command kommandoobjektet
+     * @return boolean true hvis man er ferdig i denne klassen
      */
-    public boolean processBattleCommand(GivenCommand command) {
-        boolean endBattle = false;
+    private boolean processCommand(Command command) {
+        boolean finished = false; 
         switch(command.getCommandWord()) {
-            case ATTACK:
-                endBattle = battleRound();
+            case FIGHT:
+                if(monsters.size() == 0) {
+                    output.write("\n\"All the monsters appear to be defeated already.\"");
+                    output.write("\nType \"continue\" if you wish to fetch another batch of monsters.\n");
+                } else {
+                    finished = fight(command.getSecondary());
+                }
                 break;
-            case RUN:
-                player.setGold(player.getGold() - 50);
-                System.out.println();
-                System.out.println(player.getName() + " has decided they've had enough, and runs away. 50 gold pieces is debited from their account.");
-                endBattle = true;
+            case DRINK:
+                if(player.getInventory().getAllPotions().contains(player.findItem(command.getSecondary()))) {
+                    player.useItem(player.findItem(command.getSecondary()));
+                } else {
+                    output.write("\nYou can't drink that.\n");
+                }
+                break;
+            case EQUIP:
+                if(player.getInventory().getAllWeapons().contains(player.findItem(command.getSecondary()))) {
+                    player.useItem(player.findItem(command.getSecondary()));
+                } else {
+                    output.write("\nYou can't wield that.\n");
+                }
+                break;
+            case UNEQUIP:
+                player.setEquippedWeapon(null);
+                break;
+            case USE: 
+                player.useItem(player.findItem(command.getSecondary()));
+                break;
+            case CONTINUE:
+                reset();
+                break;
+            case EXIT:
+                finished = leave();
+                break;
+            case HELP:
+                printValidCommands();
+                break;
+            case ATTACK:
+                output.write("You'll have to accept a battle by typing \"fight\" first.\n");
                 break;
             case UNKNOWN:
-                System.err.println("No such command.");
+                output.write("\nNo such command.\n");
                 break;
             default:
-                System.out.println("You may not do that now.");
+                output.write("\nYou may not do that now. Type \"help\" to see all valid commands.\n");
                 break;
         }
-        return endBattle;
+        return finished;
     }
     
     /**
-     * Kjører en kamprunde hvor spiller angriper først, og monster angriper etterpå. 
-     * @return boolean forteller om kampen er over (hvis spiller eller monster dør)
+     * Metode for å starte kamp.
+     * @param playerChoice streng som viser hva spillere skrev etter "fight"
+     * @return boolean true hvis spilleren har tapt og må forlate battleground
      */
-    public boolean battleRound() {
-        boolean endBattle = false;
-        if(endBattle = player.attack(monster)) {
-            player.setGold(player.getGold() + monster.getGold());
-            System.out.println();
-            System.out.println(player.getName() + " has defeated the " + monster.getName().toLowerCase() + " and gains " + monster.getGold() + " gold pieces.");
-        } else if(endBattle = monster.attack(player)) {
-            System.out.println();
-            System.out.println("Oh no! " + player.getName() + " has been killed by the " + monster.getName().toLowerCase() + ". The battle is lost.");
+    private boolean fight(String playerChoice) {
+        Monster monster = fetchMonster(playerChoice);
+        boolean lost = false; 
+        freePotion();
+        output.write("\nGet ready to meet the mighty " + monster.getName() + "!\n");
+        if(Battle.fight(player, monster)) {
+            graveyard.add(monster);
+            monsters.remove(monster);
+            output.write("\n" + ++monstersBeaten + " monsters defeated so far.\n");
+        } else {
+            return leave();
         }
-        roundCount++;
-        return endBattle;
+        checkMonsters();
+        return lost; 
     }
 
     /**
-     * Aksessmetode for monsterList.
-     * @return ArrayList liste over eksisterende monstre
+     * Metode for å forlate området. 
+     * @return true
      */
-    public ArrayList<Monster> getMonsterList() {
-        return this.monsterList;
+    private boolean leave() {
+        output.write("\n" + player.getName() + " has left the battleground.\n");
+        this.player = null;
+        return true; 
     }
     
-    public void setMonsterList(ArrayList<Monster> monsterList) {
-        this.monsterList = monsterList;
+    /**
+     * Metode for å resette monsterlisten man henter fra. 
+     */
+    private void reset() {
+        if(monsters.isEmpty()) {
+            for(Monster monster : graveyard) {
+                monster.changeHealth(1000);
+            }
+            sortMonsters(graveyard);
+            graveyard.clear();
+            checkMonsters();
+        } else {
+            output.write("\nYou'll have to defeat the remaining monsters before you can start over.\n");
+        }
+    }
+    
+    /**
+     * Metode som sjekker hvor mange monstre som gjenstår, og skriver ut beskjeder avhengig av dette. 
+     */
+    private void checkMonsters() {
+        if(monsters.size() > 0) {
+            output.write("\nThere are " + monsters.size() + " monsters left to kill. Type \"fight\" to continue to the next one.\n");
+            output.write("If you're looking for a challenge, type \"fight stronger\" to meet the strongest monster available.\n");
+        } else if(monsters.isEmpty()) {
+            output.write("\nCONGRATULATIONS! You have beaten every single monster in the game. The bards will sing of this triumph for decades to come!\n");
+            printStats();
+            output.write("\nIf you wish to fight again, type \"continue\".\n");
+        }
+    }
+    
+    /**
+     * Metode for å skrive velkomstmelding.
+     */
+    private void printWelcome() {
+        output.write("\nWelcome to the battleground, a dangerous place packed with the stench of death and despair. Are you ready for what lies ahead?");
+        output.write("\nIf you wish to battle, type \"fight\", and a random monster will be chosen for you.\n");
+    }
+    
+    /**
+     * Metode for å skrive ut spillerstatistikk. 
+     */
+    private void printStats() {
+        output.write("\n-------- Player Stats ---------\n");
+        output.write(this.player.toString() + "\n");
+    }
+        
+    /**
+     * Metode for å printe gyldige kommandoer i området.
+     */
+    private void printValidCommands() {
+        HashSet<String> valid = new HashSet<>();
+        valid.add("fight"); valid.add("equip"); valid.add("drink"); valid.add("use"); valid.add("help"); valid.add("exit");
+        output.write("Valid Commands:\n");
+        for(String command : reader.getCommands().keySet()) {
+            if(valid.contains(command)) {
+                output.write(command.toUpperCase() + " -- " + reader.getCommands().get(command).getDescription() + "\n");
+            }
+        }
+    }
+
+    /**
+     * Metode som gir spiller gratis potion dersom de har mistet helse. 
+     */
+    private void freePotion() {
+        if(player.getHealth() != 100) {
+            output.write("\nLooks like you've taken some damage. Here, drink this free potion before your next battle.\n");
+            player.getInventory().add(new Potion("Potion", "A health potion", "drinks", 1, 1, 50));
+            player.useItem(player.findItem("potion"));
+        }
+    }
+    
+    /**
+     * Metode som returnerer tilfeldig monster.
+     * @param playerChoice relevant dersom spilleren velger å spille mot farligste monster
+     * @return Monster
+     */
+    private Monster fetchMonster(String playerChoice) {
+        if(monsters.size() > 0) {
+            if(playerChoice.equalsIgnoreCase("harder") || playerChoice.equalsIgnoreCase("better") || playerChoice.equalsIgnoreCase("faster") || playerChoice.equalsIgnoreCase("stronger")) {
+                return monsters.get(0);
+            } else {
+                Random random = new Random();
+                return monsters.get(random.nextInt(monsters.size()));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Tar imot en liste med monstre og oppdaterer tilstand med den. Deretter sorteres monstrene
+     * i listen etter helse og maks-skade.
+     * @param monsterList liste med monstre
+     */
+    private void sortMonsters(ArrayList<Monster> monsterList) {
+        for(Monster monster : monsterList) {
+            monsters.add(monster);
+        }
+        Collections.sort(monsters, new Comparator<Monster>() {
+            public int compare(Monster mon1, Monster mon2) {
+                return Integer.compare((mon2.getMaxDamage() + mon2.getHealth()), (mon1.getMaxDamage() + mon1.getHealth()));
+            }
+        });
+    }
+    
+    /**
+     * @return String
+     */
+    public String toString() {
+        return "battleground";
+    }
+    
+    /**
+     * Aksessmetode for navn.
+     * @return String
+     */
+    public String getName() {
+        return this.name;
+    }
+    
+    /**
+     * Mutasjonsmetode for navn.
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = Utilities.checkString(name);
     }
     
     public Player getPlayer() {
-        return player;
+        return this.player;
     }
     
     public void setPlayer(Player player) {
         this.player = player;
-    }
-    
-    public Monster getMonster() {
-        return monster;
-    }
-    
-    public void setMonster(Monster monster) {
-        this.monster = monster;
-    }
-        
-    /**
-     * Private metode som velger tilfeldig monster.
-     * @return Monster
-     */
-    private Monster fetchMonster() {
-        int index = rand.nextInt(monsterList.size());
-        return monsterList.get(index);
-    }
-    
-    /**
-     * Printer en velkomst til brukeren.
-     */
-    private void printWelcome() {
-        System.out.println(player.getName() + " enters the battleground. Valid commands are ATTACK and RUN.");
-        System.out.println();
-    }
-    
-    /**
-     * Privat metode som forteller brukeren at et monster har dukket opp.
-     * @param monster monsteret som dukker opp til kamp
-     */
-    private void printEncounter(Monster monster) {
-        System.out.println("A wild " + monster.getName().toLowerCase() + " appears, and the battle is joined!");
     }
 }

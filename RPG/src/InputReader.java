@@ -1,41 +1,69 @@
+import java.util.HashMap;
 import java.util.Scanner;
 
 /**
- * Klasse som leser brukerens input i terminal. 
- * 
+ * InputReader leser det en bruker skriver og gjør dette om til et objekt av Command-klassen. 
+ *
  * @author skj006
  */
 public class InputReader {
-    
-    private Commands commands;
+    private final static HashMap<String, CommandWord> commands = new HashMap<>();
     private Scanner reader;
 
     /**
-     * Konstruktøren lager en skanner som leser tekst fra terminalen.
+     * Create a new InputReader that reads text from the text terminal.
      */
     public InputReader() {
-        this.commands = new Commands();
-        this.reader = new Scanner(System.in);
+        reader = new Scanner(System.in);
+        mapCommands();
     }
 
     /**
-     * Leser en linje med tekst fra terminalen og sjekker om det er en kommando. 
-     * @return GivenCommand en kommando
+     * Leser en linje skrevet av brukeren og returnerer de to første
+     * ordene de skrev i form av et objekt av Command-klassen.
+     * @return Command
      */
-    public GivenCommand getInput() {
+    public Command getInput() {
         System.out.print("> ");
         String inputLine = reader.nextLine().trim().toLowerCase();
         
-        Scanner eachWord = new Scanner(inputLine);
+        Scanner words = new Scanner(inputLine);
         String commandWord = null;
         String secondary = null;
-        if(eachWord.hasNext()) {
-            commandWord = eachWord.next();
-            if(eachWord.hasNext()) {
-                secondary = eachWord.next();
+        if(words.hasNext()) {
+            commandWord = words.next();
+            if(words.hasNext()) {
+                secondary = words.next();
             }
         }
-        GivenCommand input = new GivenCommand(commands.getCommandWord(commandWord), secondary);
-        return input;
+        return new Command(commands.get(commandWord), secondary);
+    }
+    
+    /**
+     * Leser en linje skrevet av en bruker, og returnerer det første ordet. 
+     * @return String det første ordet spilleren skrev
+     */
+    public String getResponse() {
+        System.out.print("> ");;
+        String inputLine = reader.nextLine().trim().toLowerCase();
+        
+        return new String(new Scanner(inputLine).next());
+    }
+    
+    /**
+     * Aksessmetode for hashmap over kommandoer.
+     * @return HashMap<String, CommandWord>
+     */
+    public HashMap<String, CommandWord> getCommands() {
+        return commands;
+    }
+    
+    /**
+     * Fyller et hashmap med gyldige kommandoer, slik at de lett kan matches opp mot input. 
+     */
+    private void mapCommands() {
+        for(CommandWord command : CommandWord.values()) {
+            commands.put(command.toString(), command);
+        }
     }
 }

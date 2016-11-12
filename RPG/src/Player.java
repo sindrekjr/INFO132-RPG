@@ -1,98 +1,99 @@
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.stream.*;
 
 /**
- * Klassen representerer en spiller i et RPG-spill. Subklasse av Creature. 
+ * Klassen representerer en spiller i et RPG-spill
  * 
  * @author skj006
  */
-public class Player extends Creature {
-    
-    private String type;
+public class Player extends Character {
+    private Archetype type;
     private int carryWeight;
-    private final HashMap<String, Item> inventory = new HashMap<>();
+    protected static Inventory inventory;
 
     /**
-     * Konstruktør for spilleren. Denne konstruktøren setter helsen og makshelsen til 100, gullbeholdningen til 500 og vekten spilleren kan bære til 50kg. Styrke settes tilfeldig, men minst 10.
-     * @param name      Navnet på spilleren
-     * @param type      Spillerens type. Spilleren kan bare være en av følgende [Mage, Warrior, Rogue, Ranger]. Hvis annet er spesifisert blir typen satt til Unspecified
+     * Konstruktør for spilleren. Denne konstruktøren setter helsen til 100, gullbeholdningen til 1000 og vekten spilleren kan bære til 50kg.
+     * @param name Navnet på spilleren
+     * @param type Spillerens type. Spilleren kan bare være en av følgende [Mage, Warrior, Rogue, Ranger]. Hvis annet er spesifisert blir typen satt til unspecified.
      */
     public Player(String name, String type) {
-        super(name, (Utilities.rollDice(2,6) + 10), 100, 100, 500);
+        super(name, 100, 500, 20, 70);
         setType(type);
-        setCarryWeight(50);
+        setGold(1000);
+        setCarryWeight(500);
+        this.inventory = new Inventory();
     }
 
     /**
-     * Konstruktør for spilleren. Denne konstruktøren lar deg selv definere hvor sterk spilleren er, hvor mye gull spilleren har, og hvor mange kg spilleren kan bære.
-     * @param name      Navnet på spilleren
-     * @param type      Spillerens type. Spilleren kan bare være en av følgende [Mage, Warrior, Rogue, Ranger]. Hvis annet er spesifisert blir typen satt til Unspecified
-     * @param strength  Spillerens styrke
-     * @param weight    Antall kg spilleren kan bære
-     * @param gold      Antall gull spilleren har
+     * Konstruktør for spilleren. Denne konstruktøren lar deg selv definere hvor mye gull spilleren har og hvor mange kg spilleren kan bære
+     * @param name Navnet på spilleren
+     * @param type Spillerens type. Spilleren kan bare være en av følgende [Mage, Warrior, Rogue, Ranger]. Hvis annet er spesifisert blir typen satt til unspecified.
+     * @param weight Antall kg spilleren kan bære
+     * @param gold Antall gull spilleren har
      */
-    public Player(String name, String type, int strength, int weight, int gold) {
-        super(name, strength, 100, 100, gold);
+    public Player(String name, String type, int weight, int gold, int minDamage, int maxDamage) {
+        super(name, 100, gold, minDamage, maxDamage);
         setType(type);
         setCarryWeight(weight);
+        this.inventory = new Inventory();
     }
 
     /**
-     * Metode for å kjøpe en gjenstand.
-     * @param item      gjenstanden som spilleren vil kjøpe
-     * @return boolean  true hvis spilleren får kjøpt gjenstanden, false hvis ikke
+     * Metode for å bruk en gjenstand
+     * @param item the item to use
      */
-    public boolean buyItem(Item item) {
-       boolean bought;
-       if(bought = (canCarryWeight(item) && hasEnoughMoneyToBuy(item))) {
-            this.inventory.put(item.getName().toLowerCase(), item);
-            setGold(getGold() - item.getValue());
-       }
-       return bought;
+    public boolean useItem(Item item) {
+        boolean used = false;
+        if(used = getInventory().contains(item)) {
+            item.use(this);
+            if(item.getExpendable()) {
+                inventory.remove(item);
+            }
+        }
+        return used; 
     }
 
     /**
      * Metode for å finne en gjenstand som spilleren har kjøpt
-     * @param search    Navnet på gjenstanden du ønsker å finne
-     * @return Item     referanse til gjenstanden hvis den blir funnet, null hvis ikke
+     * @param search Navnet på gjenstanden du ønsker å finne
+     * @return gjenstanden hvis den blir funnet, null hvis ikke
      */
     public Item findItem(String search) {
-        return inventory.get(search.toLowerCase().trim());
+        return inventory.get(search);
+    }
+
+    /**
+     * Metode for å kjøpe en gjenstand.
+     * @param item gjenstanden som spilleren vil kjøpe
+     * @return true hvis spilleren får kjøpt gjenstanden, false hvis ikke
+     */
+    public boolean buyItem(Item item) {
+       boolean bought = false; 
+       if(bought = (canCarryWeight(item) & hasEnoughMoney(item))) {
+            this.inventory.add(item);
+            super.setGold(super.getGold() - item.getValue());
+       } 
+       return bought;
     }
 
     /**
      * Metode for å selge en gjenstand
-     * @param item      gjenstanden som vil bli solgt
-     * @return boolean  true hvis spilleren får solgt gjenstanden, false hvis ikke
+     * @param item gjenstanden som vil bli solgt
+     * @return boolean true hvis det går fint å selge
      */
     public boolean sellItem(Item item) {
-        boolean sold;
-        if(sold = (findItem(item.getName()) != null)) {
-            setGold(getGold() + item.getValue());
-            inventory.remove(item.getName().toLowerCase());
+        boolean sold = false;
+        if(sold = (inventory.contains(item))) {
+            this.inventory.remove(item);
+            super.setGold(super.getGold() + item.getValue());
         }
-        return sold;
-    }
-    
-    /**
-     * Metode for å bruke et item. Hvis gjenstanden kun kan brukes en gang blir den også fjernet fra inventory. 
-     * @param item      gjenstanden som skal brukes
-     * @return boolean  true hvis gjenstand ble funnet og brukt, false hvis ikke
-     */
-    public boolean useItem(Item item) {
-        boolean used;
-        if(used = (findItem(item.getName()) != null)) {
-            System.out.println(getName() + " " + item.getAction() + " a " + item.getName().toLowerCase() + ".");
-            if(item.getExpendable()) {
-                this.inventory.remove(item.getName().toLowerCase());
-            }
-        }
-        return used;
+        return sold; 
     }
 
     /**
      * Hjelpemetode for å sjekke om spilleren kan bære en gjenstand.
-     * @param item      gjenstanden vi sjekker mot
-     * @return boolean  true hvis spilleren har kapasitet til å bære gjenstanden, false hvis ikke
+     * @param item gjenstanden vi sjekker mot
+     * @return true hvis spilleren har kapasitet til å bære gjenstanden, false hvis ikke
      */
     public boolean canCarryWeight(Item item) {
         return (totalWeight() + item.getWeight()) <= this.carryWeight;
@@ -100,46 +101,40 @@ public class Player extends Creature {
 
     /**
      * Hjelpemetode for å sjekke om spilleren har nok penger til å kjøpe gjenstanden
-     * @param item      gjenstanden spilleren ønsker å kjøpe
-     * @return boolean  true hvis spilleren har nok penger, false hvis ikke
+     * @param item gjenstanden spilleren ønsker å kjøpe
+     * @return true hvis spilleren har nok penger, false hvis ikke
      */
-    public boolean hasEnoughMoneyToBuy(Item item) {
-        return getGold() > item.getValue();
+    public boolean hasEnoughMoney(Item item) {
+        return super.getGold() > item.getValue();
     }
 
     /**
      * Metode for å returnere totalvekten spilleren bærer på det. Dvs. alle gjenstandene til spilleren.
-     * @return int  totalvekt som spilleren bærer
+     * @return
      */
     public int totalWeight() {
-        int weight = 0;
-        for(Item item : inventory.values()) {
-            weight += item.getWeight();
-        }
-        return weight;
+        return inventory.totalWeight();
     }
 
     /**
-     * Metode for å sjekke at riktig type blir satt på spilleren.
-     * @param type      Spillerens type. Spilleren kan bare være en av følgende [Mage, Warrior, Rogue, Ranger]. Hvis annet er spesifisert blir typen satt til Unspecified
-     * @return String   typen til spilleren. Hvis feil type blir sendt som parameter, da blir typen returnert som Unspecified
+     * Hjelpemetode for å trimme og returnere en string som lowercase (små bokstaver)
+     * @param value Verdien du vil trimme og konvertere til små bokstaver
+     * @return verdien, etter at trim og små bokstaver er lagt til
      */
-    public String checkType(String type) {
-        switch(type.toLowerCase().trim()) {
-            case "warrior":
-                return "Warrior";
-            case "rogue":
-                return "Rogue";
-            case "mage":
-                return "Mage";
-            case "ranger":
-                return "Ranger";
-            default:
-                return "Unspecified";
+    private String trimAndLowerCase(String value) {
+        return value.trim().toLowerCase();
+    }
+    
+    public Archetype checkType(String type) {
+        for(Archetype archetype : Archetype.values()) {
+            if(trimAndLowerCase(type).equalsIgnoreCase(archetype.toString())) {
+                return archetype;
+            }
         }
+        return Archetype.Unspecified;
     }
 
-    public String getType() {
+    public Archetype getType() {
         return type;
     }
 
@@ -155,41 +150,33 @@ public class Player extends Creature {
         this.carryWeight = carryWeight;
     }
 
-    public HashMap<String, Item> getInventory() {
+    public Inventory getInventory() {
         return inventory;
     }
-    
-    /**
-     * Aksess for all informasjon om spilleren. Gjenstandene til spilleren blir også printet, hvis spilleren har noen gjenstander.
-     * @return String type, vekt, og inventory i strengformat
-     */
-    public String toString() {
-        return super.toString() 
-                + "Type: " + getType()+ "\n"
-                + getName() + " can carry " + getCarryWeight() + " kg. They are currently carrying " + this.totalWeight() + " kg.\n"
-                + "\n"
-                + "Inventory: " + inventoryToString() + "\n"
-                + "------------------------------";
+
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
     }
 
     /**
-     * Aksessmetode for en spesifikk gjenstand i inventory.
-     * @param itemName navnet på item det gjelder 
-     * @return String informasjon om gjenstanden i strengformat
+     * ToString returnerer informasjon om player
+     * @return informasjon om player
      */
-    public String itemToString(String itemName) {
-        return findItem(itemName).toString();
-    }
-    
-    /**
-     * Aksessmetode for alle gjenstandene til spilleren.
-     * @return String navn på alle items i inventory i strengformat
-     */
-    private String inventoryToString() {
-        String inventoryList = "";
-        for(Item item : inventory.values()) {
-            inventoryList += item.getName() + ", ";
+    @Override
+    public String toString() {
+        String info =  super.toString();
+        info += "\nType: " + type.toString();
+        info += "\nWeight the player can carry: " + carryWeight;
+        info += "\nEquipped Weapon: ";
+        if(hasEquippedWeapon()) {
+            info += getEquippedWeapon().getName();
+        } else {
+            info += "None";
         }
-        return inventoryList;
+        
+        info += "\nInventory: ";
+        info += inventory.toString();
+
+        return info;
     }
 }

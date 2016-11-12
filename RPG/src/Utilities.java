@@ -1,13 +1,8 @@
-import java.util.Random;
-
 /**
  * En hjelpeklasse for statiske metoder
  * Created by Sindre on 23.09.2016.
  */
-public class Utilities {
-
-    private static Random rand = new Random();
-    
+public abstract class Utilities {
     /**
      * Metode for å rense et negativ til til 0
      * @param value et tall
@@ -26,24 +21,10 @@ public class Utilities {
      * @return unspecified hvis stringen er tom, hvis ikke verdien til stringen.
      */
     public static String checkString(String string) {
-        if(string.isEmpty()) {
+        if(string == null || string.isEmpty()) {
             return "Unspecified";
         } else {
             return string;
         }
-    }
-
-    /**
-     * Metode for tilfeldig resultat via terningrull.
-     * @param numberOfDice  antall terninger som trilles.
-     * @param sides         antall sider på hver terning. 
-     * @return              summen av alle terningene. 
-     */
-    public static int rollDice(int numberOfDice, int sides) {
-        int sum = 0;
-        for(int i = 0; i < numberOfDice; ++i) {
-            sum += (rand.nextInt(sides) + 1);
-        }
-        return sum;
     }
 }

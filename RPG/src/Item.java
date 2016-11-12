@@ -1,26 +1,25 @@
 /**
- * Denne klassen representer en gjenstand spilleren kan kjøpe.
+ * Denne klassen representer en gjenstand spilleren kan kjøpe
  * 
  * @author skj006
  */
 public class Item {
-    
     private String name, description, action;
     private int value, weight;
     private boolean expendable;
 
     /**
      * Konstruktør for Item
-     * @param name          navnet på gjenstanden
-     * @param description   beskrivelse av gjenstanden
-     * @param action        hva skjer når spilleren bruker gjenstanden
-     * @param value         verdien på gjenstanden i gull
-     * @param weight        vekten på gjenstanden
+     * @param name navnet på gjenstanden
+     * @param description beskrivelse av gjenstanden
+     * @param action hva skjer når spilleren bruker gjenstanden
+     * @param value verdien på gjenstanden i gull
+     * @param weight vekten på gjenstanden
      */
     public Item(String name, String description, String action, int value, int weight) {
-        setName(name);
-        setDescription(description);
-        setAction(action);
+        this.name = name;
+        this.description = description;
+        this.action = action;
         setValue(value);
         setWeight(weight);
         setExpendable(false);
@@ -28,34 +27,33 @@ public class Item {
 
     /**
      * Konstruktør for Item
-     * @param name          navnet på gjenstanden
-     * @param description   beskrivelse av gjenstanden
-     * @param action        hva skjer når spilleren bruker gjenstanden
-     * @param value         verdien på gjenstanden i gull
-     * @param weight        vekten på gjenstanden
-     * @param expendable    boolean som sier om gjenstanden blir oppbrukt
+     * @param name navnet på gjenstanden
+     * @param description beskrivelse av gjenstanden
+     * @param action hva skjer når spilleren bruker gjenstanden
+     * @param value verdien på gjenstanden i gull
+     * @param weight vekten på gjenstanden
      */
-        public Item(String name, String description, String action, int value, int weight, boolean expendable) {
-        setName(name);
-        setDescription(description);
-        setAction(action);
+    public Item(String name, String description, String action, int value, int weight, boolean expendable) {
+        this.name = name;
+        this.description = description;
+        this.action = action;
         setValue(value);
         setWeight(weight);
         setExpendable(expendable);
     }
 
     /**
-     * Aksessmetode for navnet på gjenstanden.
-     * @return String returnerer navnet på gjenstanden
+     * Supermetode for bruken av alle items. 
+     * @param user personen som bruker gjenstanden
      */
+    public void use(ItemUser user) {
+        System.out.println(user.getName() + " " + this.getAction() + " a " + this.getName());
+    }
+    
     public String getName() {
         return name;
     }
 
-    /**
-     * Mutasjonsmetode for navnet på gjenstanden.
-     * @param name det nye navnet på gjenstanden
-     */
     public void setName(String name) {
         this.name = Utilities.checkString(name);
     }
@@ -93,22 +91,28 @@ public class Item {
     }
     
     public boolean getExpendable() {
-        return expendable;
+        return this.expendable;
     }
-        
+    
     public void setExpendable(boolean expendable) {
         this.expendable = expendable;
     }
-
+        
     /**
-     * Aksessmetode for informasjon om gjenstanden.
-     * @return String navn, beskrivelse, action, verdi, og vekt i strengformat
+     * ToString returnerer informasjon om item.
+     * @return informasjon om item
      */
+    @Override
     public String toString() {
-        return "Name: " + getName() + "\n"
-                + "Description: " + getDescription() + "\n"
-                + "Action: " + getAction() + "\n"
-                + "Value: " + getValue() + "\n"
-                + "Weight: " + getWeight() + "\n";
+        String info = "";
+        info += "Name: " + name;
+        info += "\nDescription: " + description;
+        info += "\nAction: " + action;
+        info += "\nValue: " + value;
+        info += "\nWeight: " + weight;
+        if(expendable) {
+            info += "\nUse: Single";
+        }
+        return info;
     }
 }
